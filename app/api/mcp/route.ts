@@ -4,6 +4,7 @@ import { registerDiagnosticsTools } from "@/src/tools/diagnostics";
 import { registerCustomerTools } from "@/src/tools/customers";
 import { registerProductTools } from "@/src/tools/products";
 import { registerSalesTools } from "@/src/tools/sales";
+import { registerReportTools } from "@/src/tools/reports";
 import { verifyMcpToken } from "@/src/security/auth";
 
 const handler = createMcpHandler(
@@ -13,6 +14,7 @@ const handler = createMcpHandler(
     registerCustomerTools(server);
     registerProductTools(server);
     registerSalesTools(server);
+    registerReportTools(server);
   },
   {
     serverInfo: {

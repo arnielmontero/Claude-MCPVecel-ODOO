@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { searchRead, read } from "@/src/odoo/client";
+import { withToolLogging } from "@/src/security/logger";
 
 interface SaleOrder {
   id: number;
@@ -38,7 +39,7 @@ export function registerSalesTools(server: McpServer) {
         limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results to return."),
       }),
     },
-    async ({ search_term, limit }) => {
+    withToolLogging("search_sales_orders", async ({ search_term, limit }) => {
       const orders = await searchRead<SaleOrder>("sale.order", {
         domain: [
           "|",
@@ -67,7 +68,7 @@ export function registerSalesTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -80,7 +81,7 @@ export function registerSalesTools(server: McpServer) {
         order_id: z.number().int().positive().describe("The Odoo sale.order id."),
       }),
     },
-    async ({ order_id }) => {
+    withToolLogging("get_sales_order", async ({ order_id }) => {
       const orders = await read<SaleOrder>("sale.order", [order_id], [
         "id",
         "name",
@@ -125,6 +126,6 @@ export function registerSalesTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 }

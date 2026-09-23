@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { resolveSalesSummary } from "@/src/reports/resolver";
 import { generateSalesSummaryExcel } from "@/src/reports/excel";
 import { generateSalesSummaryPdf } from "@/src/reports/pdf";
+import { withToolLogging } from "@/src/security/logger";
 
 const dateSchema = z
   .string()
@@ -28,13 +29,13 @@ export function registerReportTools(server: McpServer) {
         "Returns confirmed Odoo sales order totals for a date range, resolved directly from Odoo (not calculated by the model).",
       inputSchema: dateRangeInput,
     },
-    async ({ date_from, date_to }) => {
+    withToolLogging("get_sales_summary", async ({ date_from, date_to }) => {
       const summary = await resolveSalesSummary({ dateFrom: date_from, dateTo: date_to });
 
       return {
         content: [{ type: "text", text: JSON.stringify(summary) }],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -45,7 +46,7 @@ export function registerReportTools(server: McpServer) {
         "Generates an Excel (.xlsx) sales summary report for a date range, using the same fixed resolver as get_sales_summary.",
       inputSchema: dateRangeInput,
     },
-    async ({ date_from, date_to }) => {
+    withToolLogging("export_sales_excel", async ({ date_from, date_to }) => {
       const summary = await resolveSalesSummary({ dateFrom: date_from, dateTo: date_to });
       const buffer = await generateSalesSummaryExcel(summary);
       const filename = `sales-summary-${date_from}-to-${date_to}.xlsx`;
@@ -66,7 +67,7 @@ export function registerReportTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -77,7 +78,7 @@ export function registerReportTools(server: McpServer) {
         "Generates a PDF sales summary report for a date range, using the same fixed resolver as get_sales_summary.",
       inputSchema: dateRangeInput,
     },
-    async ({ date_from, date_to }) => {
+    withToolLogging("export_sales_pdf", async ({ date_from, date_to }) => {
       const summary = await resolveSalesSummary({ dateFrom: date_from, dateTo: date_to });
       const buffer = await generateSalesSummaryPdf(summary);
       const filename = `sales-summary-${date_from}-to-${date_to}.pdf`;
@@ -98,6 +99,6 @@ export function registerReportTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 }

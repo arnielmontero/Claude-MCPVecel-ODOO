@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { withToolLogging } from "@/src/security/logger";
 
 /**
  * Registers the smallest possible MCP tool: hello().
@@ -14,12 +15,12 @@ export function registerHelloTool(server: McpServer) {
       description: "Returns a static greeting from the Odoo MCP Server. Used to verify the MCP protocol path end to end.",
       inputSchema: z.object({}),
     },
-    async () => {
+    withToolLogging("hello", async () => {
       return {
         content: [
           { type: "text", text: "Hello from the Odoo MCP Server." },
         ],
       };
-    },
+    }),
   );
 }

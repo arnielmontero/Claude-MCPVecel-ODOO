@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { searchRead, read } from "@/src/odoo/client";
+import { withToolLogging } from "@/src/security/logger";
 
 interface Product {
   id: number;
@@ -27,7 +28,7 @@ export function registerProductTools(server: McpServer) {
         limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results to return."),
       }),
     },
-    async ({ search_term, limit }) => {
+    withToolLogging("search_products", async ({ search_term, limit }) => {
       const products = await searchRead<Product>("product.product", {
         domain: [
           "|",
@@ -54,7 +55,7 @@ export function registerProductTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -66,7 +67,7 @@ export function registerProductTools(server: McpServer) {
         product_id: z.number().int().positive().describe("The Odoo product.product id."),
       }),
     },
-    async ({ product_id }) => {
+    withToolLogging("get_product", async ({ product_id }) => {
       const results = await read<Product>("product.product", [product_id], [
         "id",
         "name",
@@ -99,6 +100,6 @@ export function registerProductTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 }

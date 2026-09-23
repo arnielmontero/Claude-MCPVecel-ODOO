@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { searchRead, read } from "@/src/odoo/client";
+import { withToolLogging } from "@/src/security/logger";
 
 interface Partner {
   id: number;
@@ -26,7 +27,7 @@ export function registerCustomerTools(server: McpServer) {
         limit: z.number().int().min(1).max(50).default(10).describe("Maximum number of results to return."),
       }),
     },
-    async ({ search_term, limit }) => {
+    withToolLogging("search_customers", async ({ search_term, limit }) => {
       const customers = await searchRead<Partner>("res.partner", {
         domain: [
           ["customer_rank", ">", 0],
@@ -56,7 +57,7 @@ export function registerCustomerTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -68,7 +69,7 @@ export function registerCustomerTools(server: McpServer) {
         customer_id: z.number().int().positive().describe("The Odoo res.partner id of the customer."),
       }),
     },
-    async ({ customer_id }) => {
+    withToolLogging("get_customer", async ({ customer_id }) => {
       const results = await read<Partner>("res.partner", [customer_id], [
         "id",
         "name",
@@ -99,6 +100,6 @@ export function registerCustomerTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 }

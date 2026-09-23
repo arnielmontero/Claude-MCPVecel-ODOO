@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { withToolLogging } from "@/src/security/logger";
 
 /**
  * Simple, Odoo-free test tools (Build Process Phase 5). These exist only to
@@ -13,7 +14,7 @@ export function registerDiagnosticsTools(server: McpServer) {
       description: "Returns the current status of the MCP server.",
       inputSchema: z.object({}),
     },
-    async () => {
+    withToolLogging("get_server_status", async () => {
       return {
         content: [
           {
@@ -22,7 +23,7 @@ export function registerDiagnosticsTools(server: McpServer) {
           },
         ],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -32,11 +33,11 @@ export function registerDiagnosticsTools(server: McpServer) {
       description: "Returns the current server time in ISO 8601 format.",
       inputSchema: z.object({}),
     },
-    async () => {
+    withToolLogging("get_current_time", async () => {
       return {
         content: [{ type: "text", text: new Date().toISOString() }],
       };
-    },
+    }),
   );
 
   const calculateInput = z.object({
@@ -52,7 +53,7 @@ export function registerDiagnosticsTools(server: McpServer) {
       description: "Performs a basic arithmetic operation on two numbers.",
       inputSchema: calculateInput,
     },
-    async ({ operation, value1, value2 }) => {
+    withToolLogging("calculate", async ({ operation, value1, value2 }) => {
       let result: number;
       switch (operation) {
         case "add":
@@ -78,6 +79,6 @@ export function registerDiagnosticsTools(server: McpServer) {
       return {
         content: [{ type: "text", text: JSON.stringify({ result }) }],
       };
-    },
+    }),
   );
 }

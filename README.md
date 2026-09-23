@@ -21,8 +21,13 @@ for the full build plan and architectural rules this project follows.
 - [x] Phase 7 — Connect MCP Server to Odoo (read-only, verified in production)
 - [x] Phase 13 (partial) — `search_customers`, `get_customer`, `search_products`,
       `get_product`, `search_sales_orders`, `get_sales_order`
-- [ ] Phase 8 — Reporting tools (fixed resolver + Excel/PDF export)
-- [ ] Phase 9 — Security (MCP endpoint auth, rate limiting, logging)
+- [x] Phase 8 — Reporting tools: `get_sales_summary`, `export_sales_excel`,
+      `export_sales_pdf` via a fixed resolver (`src/reports/resolver.ts`).
+      Verified against production Odoo data, including opening/parsing the
+      generated .xlsx and .pdf files.
+- [x] Phase 9 — Security: bearer token auth (required, fails closed),
+      structured per-tool-call logging, best-effort rate limiting
+      (see note below)
 - [ ] Phase 10 — Claude Pro remote MCP connection
 
 ## Development
@@ -67,3 +72,20 @@ values live in Vercel Environment Variables.
 - No direct PostgreSQL access from Claude.
 - Report figures are always resolved through a fixed backend path against
   Odoo — never computed by the LLM.
+- The MCP endpoint requires a bearer token (`MCP_AUTH_TOKEN`) and fails
+  closed if it isn't configured.
+
+### Rate limiting is best-effort, not a hard guarantee
+
+`src/security/rateLimit.ts` is an in-memory sliding-window limiter
+(60 requests/minute per authenticated client). This works correctly in
+local development and on a single long-lived server, but **Vercel's
+serverless runtime spreads requests across multiple isolated function
+instances, each with its own empty in-memory counter** — confirmed by a
+65-request burst against production that saw no 429s, versus the same
+burst locally correctly returning 429 after request 60. In production
+this still helps against a tight retry loop that happens to stay pinned
+to one warm instance, but it does not enforce a true cross-instance
+ceiling. A real fix requires a shared store (Vercel KV / Upstash Redis)
+keyed by client id — not implemented yet, since there is exactly one
+authorized client (Claude Pro) rather than public traffic.

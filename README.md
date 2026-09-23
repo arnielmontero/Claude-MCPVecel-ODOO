@@ -17,9 +17,13 @@ for the full build plan and architectural rules this project follows.
 - [x] Phase 3 — Smallest MCP server (`hello()` tool)
 - [x] Phase 4 — Verified with MCP Inspector
 - [x] Phase 5 — Additional test tools (`get_server_status`, `get_current_time`, `calculate`)
-- [ ] Phase 6 — MCP tool architecture (module layout in place; more tools pending)
-- [ ] Phase 7 — Connect MCP Server to Odoo
-- [ ] Phase 8+ — Odoo tools, reports, security, Claude Pro connection
+- [x] Phase 6 — MCP tool architecture (module layout in place)
+- [x] Phase 7 — Connect MCP Server to Odoo (read-only, verified in production)
+- [x] Phase 13 (partial) — `search_customers`, `get_customer`, `search_products`,
+      `get_product`, `search_sales_orders`, `get_sales_order`
+- [ ] Phase 8 — Reporting tools (fixed resolver + Excel/PDF export)
+- [ ] Phase 9 — Security (MCP endpoint auth, rate limiting, logging)
+- [ ] Phase 10 — Claude Pro remote MCP connection
 
 ## Development
 
@@ -52,10 +56,9 @@ src/
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` for local development. Real credentials
-are never committed — production values belong in Vercel Environment
-Variables. Odoo access is not yet wired up; these variables are reserved
-for Phase 7.
+Copy `.env.example` to `.env.local` and fill in real Odoo credentials for
+local development. Real credentials are never committed — production
+values live in Vercel Environment Variables.
 
 ## Security principles
 

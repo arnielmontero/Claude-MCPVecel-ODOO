@@ -74,8 +74,8 @@ headers** path instead:
    server. Manually change it to **"No sign-in"**.
 4. Under **Request headers**, click **+ Add header**:
    - Header name: `authorization`
-   - Header value: `Bearer <your MCP_AUTH_TOKEN>` — include the literal
-     word `Bearer` and a single space before the token. Claude sends
+   - Header value: `Bearer <your MCP_AUTH_TOKEN>` — include the literal 
+     word `Bearer 00771597b6f3870ab88e500a4221520986da23feea84255071cda05bc49519e7` and a single space before the token. Claude sends
      the header value exactly as entered, with no scheme added
      automatically.
    - Mark it **Required**.

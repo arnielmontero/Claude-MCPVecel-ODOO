@@ -28,7 +28,7 @@ for the full build plan and architectural rules this project follows.
 - [x] Phase 9 — Security: bearer token auth (required, fails closed),
       structured per-tool-call logging, best-effort rate limiting
       (see note below)
-- [ ] Phase 10 — Claude Pro remote MCP connection
+- [x] Phase 10 — Claude Pro remote MCP connection (see below)
 
 ## Development
 
@@ -58,6 +58,53 @@ src/
   reports/            Fixed report resolver (Phase 8+)
   security/           Auth/authorization (Phase 9+)
 ```
+
+## Connecting to Claude Pro
+
+This server authenticates with a single static bearer token
+(`MCP_AUTH_TOKEN`), not full OAuth. Claude's "Add custom connector"
+dialog defaults to OAuth auto-discovery and will fail to register
+against a token-only server — use the **No sign-in** + **Request
+headers** path instead:
+
+1. In Claude, go to **Customize → Connectors → Add custom connector**.
+2. **MCP server URL**: `https://claude-mcp-vecel-odoo.vercel.app/api/mcp`
+3. Continue past the URL step. Claude may auto-detect and pre-select
+   **"Sign in now"** under Authentication — this is wrong for this
+   server. Manually change it to **"No sign-in"**.
+4. Under **Request headers**, click **+ Add header**:
+   - Header name: `authorization`
+   - Header value: `Bearer <your MCP_AUTH_TOKEN>` — include the literal
+     word `Bearer` and a single space before the token. Claude sends
+     the header value exactly as entered, with no scheme added
+     automatically.
+   - Mark it **Required**.
+5. Click **Add**.
+6. In a chat, open the **"+"** menu → **Connectors**, and toggle the
+   connector on for that conversation.
+
+Request header authentication is a beta feature and may not be visible
+on every account; if the **Request headers** section doesn't appear,
+it isn't enabled for your account yet.
+
+### Verifying the connection
+
+Ask Claude something simple first, e.g. "say hello using the Odoo MCP
+server" (exercises `hello` with no Odoo dependency), then a real query
+like "search for a customer named X" or "give me the sales summary for
+September 1 to September 23". Tool calls and their outcomes are visible
+in Vercel's function logs as `mcp_tool_call` JSON lines (see
+`src/security/logger.ts`).
+
+### This connector is strictly read-only
+
+Every MCP tool is backed by `src/odoo/client.ts`, which exports only
+`searchRead` and `read` — wrappers around Odoo's `search_read` and
+`read` methods. The function capable of calling arbitrary Odoo methods
+(`executeKw`) is private to that file and is never called with
+anything but those two read operations. There is no `create`, `write`,
+or `unlink` path reachable from any tool, so nothing Claude sends
+through this connector can add, modify, or delete Odoo records.
 
 ## Environment variables
 

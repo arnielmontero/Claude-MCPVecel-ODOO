@@ -7,6 +7,18 @@ const MARGIN = 48;
 const ROW_HEIGHT = 16;
 
 /**
+ * pdf-lib's standard fonts only support WinAnsi (Windows-1252) encoding.
+ * Odoo customer/product names can contain arbitrary Unicode (e.g. Polish
+ * "ł"), which would otherwise throw at render time. Normalize accented
+ * Latin characters to their closest ASCII form and drop anything else
+ * WinAnsi can't encode, rather than fail the whole report.
+ */
+function toWinAnsiSafe(text: string): string {
+  const normalized = text.normalize("NFKD").replace(/[̀-ͯ]/g, "");
+  return normalized.replace(/[^\x20-\x7e]/g, "?");
+}
+
+/**
  * Tool Executor step for PDF export (Build Process Phase 16). Renders a
  * resolved SalesSummaryResult into a .pdf file. Takes only already
  * -resolved figures — performs no independent calculation.
@@ -62,8 +74,8 @@ export async function generateSalesSummaryPdf(summary: SalesSummaryResult): Prom
   for (const order of summary.orders) {
     newPageIfNeeded();
     const values = [
-      order.reference,
-      (order.customer ?? "").slice(0, 34),
+      toWinAnsiSafe(order.reference),
+      toWinAnsiSafe((order.customer ?? "").slice(0, 34)),
       order.date_order ?? "",
       order.status,
       order.amount_total.toFixed(2),

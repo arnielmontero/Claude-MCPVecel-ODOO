@@ -1,9 +1,10 @@
-import { createMcpHandler } from "mcp-handler";
+import { createMcpHandler, experimental_withMcpAuth as withMcpAuth } from "mcp-handler";
 import { registerHelloTool } from "@/src/tools/hello";
 import { registerDiagnosticsTools } from "@/src/tools/diagnostics";
 import { registerCustomerTools } from "@/src/tools/customers";
 import { registerProductTools } from "@/src/tools/products";
 import { registerSalesTools } from "@/src/tools/sales";
+import { verifyMcpToken } from "@/src/security/auth";
 
 const handler = createMcpHandler(
   (server) => {
@@ -21,4 +22,6 @@ const handler = createMcpHandler(
   },
 );
 
-export { handler as GET, handler as POST };
+const authedHandler = withMcpAuth(handler, verifyMcpToken, { required: true });
+
+export { authedHandler as GET, authedHandler as POST };
